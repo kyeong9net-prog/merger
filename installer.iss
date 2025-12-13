@@ -23,7 +23,7 @@ ArchitecturesInstallIn64BitMode=x64
 PrivilegesRequired=lowest
 ; UI
 WizardStyle=modern
-SetupIconFile=icon.ico
+; SetupIconFile=icon.ico  ; 아이콘 파일이 없으면 주석 처리
 UninstallDisplayIcon={app}\ExcelMerger.exe
 
 [Languages]
