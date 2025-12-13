@@ -1,12 +1,16 @@
-"""파일 선택 UI 및 검증 (Phase 1, Phase 2 강화)
+"""파일 선택 UI 및 검증 (Phase 1, Phase 2, Phase 4 강화)
 
 Single Responsibility: 파일 선택과 기본 검증만 담당
+
+Phase 4 품질 요구사항:
+- 표준화된 오류 메시지 제공
 """
 import os
 from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import List, Optional
 from src.logger import Logger
+from src.error_messages import file_count_exceeded_error
 
 
 class FileSelector:
@@ -95,8 +99,7 @@ class FileSelector:
         if len(file_paths) > self.MAX_FILES:
             messagebox.showerror(
                 "오류",
-                f"최대 {self.MAX_FILES}개의 파일만 선택할 수 있습니다.\\n"
-                f"현재 선택된 파일: {len(file_paths)}개"
+                file_count_exceeded_error(self.MAX_FILES)
             )
             return False
 

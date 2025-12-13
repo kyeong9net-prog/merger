@@ -1,12 +1,16 @@
-"""엑셀 병합 로직 통합 (Phase 1, Phase 2 강화)
+"""엑셀 병합 로직 통합 (Phase 1, Phase 2, Phase 4 강화)
 
 Single Responsibility: 전체 병합 프로세스를 조율하는 책임만 담당
+
+Phase 4 품질 요구사항:
+- 표준화된 오류 메시지 제공
 """
 import os
 from typing import Any, List, Optional
 from src.excel_reader import ExcelReader
 from src.header_validator import HeaderValidator, HeaderValidationError
 from src.logger import Logger
+from src.error_messages import no_valid_files_error, no_data_rows_error
 
 
 class ExcelMerger:
@@ -75,13 +79,13 @@ class ExcelMerger:
 
         # 결과 확인
         if header is None:
-            error_msg = "모든 파일 처리에 실패했습니다.\\n유효한 summary 시트와 2행 데이터를 가진 파일이 없습니다."  # noqa: E501
+            error_msg = no_valid_files_error()
             if self.logger:
                 self.logger.error(error_msg)
             return (None, [], error_msg)
 
         if not data_rows:
-            error_msg = "병합할 데이터가 없습니다.\\n모든 파일의 2행이 비어있습니다."
+            error_msg = no_data_rows_error()
             if self.logger:
                 self.logger.error(error_msg)
             return (None, [], error_msg)

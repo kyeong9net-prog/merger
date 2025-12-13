@@ -1,6 +1,10 @@
-"""엑셀 파일 읽기 및 데이터 추출 (Phase 1, Phase 2 강화)
+"""엑셀 파일 읽기 및 데이터 추출 (Phase 1, Phase 2, Phase 4 강화)
 
 Single Responsibility: 엑셀 파일에서 데이터를 읽고 추출하는 책임만 담당
+
+Phase 4 품질 요구사항:
+- 한국어 파일명 지원 (Python 3.9+ UTF-8 기본 지원)
+- 가변 열 개수 지원 (각 파일마다 열 개수가 달라도 정상 처리)
 """
 import os
 from typing import Any, List, Optional, Tuple
@@ -40,7 +44,8 @@ class ExcelReader:
         file_name = os.path.basename(file_path)
 
         try:
-            workbook = load_workbook(file_path, data_only=True)
+            # Phase 4: 원본 파일 읽기 전용 처리 (read_only=True)
+            workbook = load_workbook(file_path, data_only=True, read_only=True)
         except PermissionError:
             if self.logger:
                 self.logger.error("파일이 잠겨있습니다. 다른 프로그램에서 파일을 닫아주세요.", file_name)

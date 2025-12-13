@@ -1,11 +1,21 @@
-"""헤더 검증 로직 (Phase 1)
+"""헤더 검증 로직 (Phase 1, Phase 4 강화)
 
 Single Responsibility: 첫 번째 파일의 헤더(1행) 검증만 담당
+
+Phase 4 품질 요구사항:
+- 원본 파일 읽기 전용 처리 (read_only=True)
+- 표준화된 오류 메시지 제공
 """
 from typing import Any, List
 from datetime import datetime, date
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from src.error_messages import (
+    header_empty_error,
+    header_merged_cells_error,
+    header_date_format_error,
+    header_formula_error
+)
 
 
 class HeaderValidationError(Exception):
@@ -31,7 +41,8 @@ class HeaderValidator:
             HeaderValidationError: 헤더 검증 실패 시
         """
         try:
-            workbook = load_workbook(file_path, data_only=False)
+            # Phase 4: 원본 파일 읽기 전용 처리
+            workbook = load_workbook(file_path, data_only=False, read_only=True)
         except Exception as e:
             raise HeaderValidationError(f"파일 읽기 실패: {e}")
 
@@ -72,13 +83,13 @@ class HeaderValidator:
 
         # 모든 값이 None이거나 빈 문자열인지 확인
         if not values:
-            raise HeaderValidationError("1행 전체가 비어있습니다. 병합 작업을 중단합니다.")
+            raise HeaderValidationError(header_empty_error())
 
         for value in values:
             if value is not None and str(value).strip() != "":
                 return  # 하나라도 값이 있으면 통과
 
-        raise HeaderValidationError("1행 전체가 비어있습니다. 병합 작업을 중단합니다.")
+        raise HeaderValidationError(header_empty_error())
 
     def _validate_no_merged_cells(self, sheet: Worksheet) -> None:
         """1행에 병합 셀이 없는지 검증
@@ -92,9 +103,7 @@ class HeaderValidator:
         for merged_range in sheet.merged_cells.ranges:
             # 병합 셀의 최소/최대 행 확인
             if merged_range.min_row <= 1 <= merged_range.max_row:
-                raise HeaderValidationError(
-                    "1행에 병합된 셀이 포함되어 있습니다. 병합 작업을 중단합니다."
-                )
+                raise HeaderValidationError(header_merged_cells_error())
 
     def _validate_no_dates(self, sheet: Worksheet) -> None:
         """1행에 날짜 형식이 없는지 검증
@@ -113,9 +122,7 @@ class HeaderValidator:
 
             # datetime 또는 date 타입 체크
             if isinstance(cell.value, (datetime, date)):
-                raise HeaderValidationError(
-                    "1행에 날짜 형식이 포함되어 있습니다. 병합 작업을 중단합니다."
-                )
+                raise HeaderValidationError(header_date_format_error())
 
     def _validate_no_formulas(self, sheet: Worksheet) -> None:
         """1행에 수식이 없는지 검증
@@ -135,15 +142,11 @@ class HeaderValidator:
 
             # 수식이 있는지 확인 (data_type이 'f'이거나 value가 '='로 시작)
             if hasattr(cell, 'data_type') and cell.data_type == 'f':
-                raise HeaderValidationError(
-                    "1행에 수식이 포함되어 있습니다. 병합 작업을 중단합니다."
-                )
+                raise HeaderValidationError(header_formula_error())
 
             # 추가 안전장치: value가 문자열이고 '='로 시작하는 경우
             if isinstance(cell.value, str) and cell.value.startswith('='):
-                raise HeaderValidationError(
-                    "1행에 수식이 포함되어 있습니다. 병합 작업을 중단합니다."
-                )
+                raise HeaderValidationError(header_formula_error())
 
     def validate_header_data(self, header_data: List[Any]) -> None:
         """헤더 데이터 검증 (간단한 검증)

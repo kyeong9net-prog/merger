@@ -1,6 +1,9 @@
-"""결과 파일 생성 및 저장 (Phase 1, Phase 2 강화)
+"""결과 파일 생성 및 저장 (Phase 1, Phase 2, Phase 4 강화)
 
 Single Responsibility: 병합된 데이터를 엑셀 파일로 저장하는 책임만 담당
+
+Phase 4 품질 요구사항:
+- 결과 파일 생성 실패 시 명확한 오류 메시지 제공
 """
 import os
 from datetime import datetime
@@ -115,8 +118,28 @@ class FileWriter:
                 self.logger.success(f"병합 완료: {save_path}")
                 self.logger.info(f"총 {len(data_rows)}개 파일의 데이터가 병합되었습니다.")
 
+        except PermissionError as e:
+            # Phase 4: 명확한 오류 메시지 제공
+            raise Exception(
+                f"파일 저장 권한 오류\n\n"
+                f"원인: 저장 위치에 파일을 쓸 수 없습니다.\n"
+                f"상세: {e}\n\n"
+                f"해결 방법:\n"
+                f"1. 저장 위치의 폴더 권한을 확인하세요.\n"
+                f"2. 다른 프로그램에서 동일한 파일을 열고 있다면 닫아주세요.\n"
+                f"3. 충분한 디스크 공간이 있는지 확인하세요."
+            )
         except Exception as e:
-            raise Exception(f"파일 생성 실패: {e}")
+            # Phase 4: 명확한 오류 메시지 제공
+            raise Exception(
+                f"파일 생성 오류\n\n"
+                f"원인: 병합 파일을 생성하는 중 오류가 발생했습니다.\n"
+                f"상세: {e}\n\n"
+                f"해결 방법:\n"
+                f"1. 저장 위치를 다시 확인하세요.\n"
+                f"2. 파일명에 특수문자가 없는지 확인하세요.\n"
+                f"3. 충분한 디스크 공간이 있는지 확인하세요."
+            )
 
     def _write_row(self, sheet: Worksheet, row_number: int, data: List[Any]) -> None:
         """워크시트에 행 데이터 쓰기
