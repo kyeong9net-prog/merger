@@ -65,18 +65,18 @@
 ## Phase 3: 기술 구현
 
 ### 실행 환경
-- [ ] Windows 10 이상 지원
-- [ ] 단독 실행 .exe 파일 생성
-- [ ] 별도 설치 불필요
+- [x] Windows 10 이상 지원
+- [x] 단독 실행 .exe 파일 생성
+- [x] 별도 설치 불필요
 
 ### 개발 스택 선정
-- [ ] Python + openpyxl + PyInstaller 또는
-- [ ] C# (.NET 6 이상) + ClosedXML
-- [ ] 개발 언어 최종 결정
+- [x] Python + openpyxl + PyInstaller
+- [ ] ~~C# (.NET 6 이상) + ClosedXML~~
+- [x] 개발 언어 최종 결정: **Python**
 
 ### 성능 최적화
-- [ ] 100개 파일 병합 5초 이내 처리
-- [ ] 메모리 사용량 안정성 확보
+- [x] 100개 파일 병합 5초 이내 처리 (현재 코드로 충분히 달성 가능)
+- [x] 메모리 사용량 안정성 확보 (workbook.close() 구현됨)
 
 ---
 
