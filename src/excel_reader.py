@@ -1,11 +1,13 @@
-"""엑셀 파일 읽기 및 데이터 추출 (Phase 1)
+"""엑셀 파일 읽기 및 데이터 추출 (Phase 1, Phase 2 강화)
 
 Single Responsibility: 엑셀 파일에서 데이터를 읽고 추출하는 책임만 담당
 """
+import os
 from typing import Any, List, Optional, Tuple
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.workbook.workbook import Workbook
+from src.logger import Logger
 
 
 class ExcelReader:
@@ -13,9 +15,13 @@ class ExcelReader:
 
     SUMMARY_SHEET_NAME = "summary"
 
-    def __init__(self) -> None:
-        """ExcelReader 초기화"""
-        pass
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        """ExcelReader 초기화
+
+        Args:
+            logger: Logger 인스턴스 (None이면 로깅 안 함)
+        """
+        self.logger = logger
 
     def read_file(self, file_path: str) -> Tuple[Optional[List[Any]], Optional[List[Any]], str]:  # noqa: E501
         """엑셀 파일에서 헤더(1행)와 데이터(2행) 읽기
@@ -28,19 +34,28 @@ class ExcelReader:
             - 성공: (header, row2, "SUCCESS")
             - summary 시트 없음: (None, None, "NO_SUMMARY_SHEET")
             - 2행 비어있음: (None, None, "ROW2_EMPTY")
+            - 파일 잠김: (None, None, "FILE_LOCKED")
             - 파일 읽기 오류: (None, None, "FILE_ERROR")
         """
+        file_name = os.path.basename(file_path)
+
         try:
             workbook = load_workbook(file_path, data_only=True)
+        except PermissionError:
+            if self.logger:
+                self.logger.error("파일이 잠겨있습니다. 다른 프로그램에서 파일을 닫아주세요.", file_name)
+            return (None, None, "FILE_LOCKED")
         except Exception as e:
-            print(f"[ERROR] {file_path} - 파일 읽기 실패: {e}")
+            if self.logger:
+                self.logger.error(f"파일 읽기 실패: {e}", file_name)
             return (None, None, "FILE_ERROR")
 
         # summary 시트 찾기 (대소문자 구분 없이)
         summary_sheet = self._find_summary_sheet(workbook)
 
         if summary_sheet is None:
-            print(f"[SKIP] {file_path} - summary 시트가 없습니다.")
+            if self.logger:
+                self.logger.skip("summary 시트가 없습니다.", file_name)
             workbook.close()
             return (None, None, "NO_SUMMARY_SHEET")
 
@@ -54,10 +69,12 @@ class ExcelReader:
 
         # 2행 전체가 비어있는지 확인
         if self._is_row_empty(row2_data):
-            print(f"[SKIP] {file_path} - summary 시트 2행 전체가 비어있습니다.")
+            if self.logger:
+                self.logger.skip("summary 시트 2행 전체가 비어있습니다.", file_name)
             return (None, None, "ROW2_EMPTY")
 
-        print(f"[SUCCESS] {file_path} - {len(row2_data)} columns extracted.")
+        if self.logger:
+            self.logger.success(f"{len(row2_data)} columns extracted", file_name)
         return (header, row2_data, "SUCCESS")
 
     def _find_summary_sheet(self, workbook: Workbook) -> Optional[Worksheet]:

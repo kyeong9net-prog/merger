@@ -1,4 +1,4 @@
-"""파일 선택 UI 및 검증 (Phase 1)
+"""파일 선택 UI 및 검증 (Phase 1, Phase 2 강화)
 
 Single Responsibility: 파일 선택과 기본 검증만 담당
 """
@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import List, Optional
+from src.logger import Logger
 
 
 class FileSelector:
@@ -14,9 +15,13 @@ class FileSelector:
     MAX_FILES = 100
     ALLOWED_EXTENSIONS = ('.xlsx', '.xls')
 
-    def __init__(self) -> None:
-        """FileSelector 초기화"""
-        pass
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        """FileSelector 초기화
+
+        Args:
+            logger: Logger 인스턴스 (None이면 로깅 안 함)
+        """
+        self.logger = logger
 
     def select_files(self) -> Optional[List[str]]:
         """다중 파일 선택 UI 표시
@@ -116,7 +121,7 @@ class FileSelector:
             else:
                 invalid_files.append(os.path.basename(file_path))
 
-        if invalid_files:
-            print(f"[SKIP] 지원하지 않는 파일 형식: {', '.join(invalid_files)}")
+        if invalid_files and self.logger:
+            self.logger.skip(f"지원하지 않는 파일 형식: {', '.join(invalid_files)}")
 
         return valid_files

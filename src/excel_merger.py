@@ -1,18 +1,25 @@
-"""엑셀 병합 로직 통합 (Phase 1)
+"""엑셀 병합 로직 통합 (Phase 1, Phase 2 강화)
 
 Single Responsibility: 전체 병합 프로세스를 조율하는 책임만 담당
 """
+import os
 from typing import Any, List, Optional
 from src.excel_reader import ExcelReader
 from src.header_validator import HeaderValidator, HeaderValidationError
+from src.logger import Logger
 
 
 class ExcelMerger:
     """엑셀 병합 프로세스 조율 클래스"""
 
-    def __init__(self) -> None:
-        """ExcelMerger 초기화"""
-        self.reader = ExcelReader()
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        """ExcelMerger 초기화
+
+        Args:
+            logger: Logger 인스턴스 (None이면 로깅 안 함)
+        """
+        self.logger = logger
+        self.reader = ExcelReader(logger)
         self.validator = HeaderValidator()
 
     def merge_files(self, file_paths: List[str]) -> tuple[Optional[List[Any]], List[List[Any]], str]:  # noqa: E501
@@ -30,7 +37,8 @@ class ExcelMerger:
         data_rows: List[List[Any]] = []
         first_success_file: Optional[str] = None
 
-        print("\\n=== 파일 병합 시작 ===\\n")
+        if self.logger:
+            self.logger.info("=== 파일 병합 시작 ===")
 
         for file_path in file_paths:
             # 파일 읽기
@@ -51,11 +59,14 @@ class ExcelMerger:
                     header = file_header
                     first_success_file = file_path
 
-                    print(f"[INFO] 헤더 설정 완료: {file_path}")
+                    if self.logger:
+                        file_name = os.path.basename(file_path)
+                        self.logger.info("헤더 설정 완료", file_name)
 
                 except HeaderValidationError as e:
                     error_msg = f"첫 번째 파일의 헤더 검증 실패:\\n{file_path}\\n\\n오류: {e}"
-                    print(f"\\n[ERROR] {error_msg}")
+                    if self.logger:
+                        self.logger.error(error_msg)
                     return (None, [], error_msg)
 
             # 2행 데이터 추가
@@ -65,16 +76,19 @@ class ExcelMerger:
         # 결과 확인
         if header is None:
             error_msg = "모든 파일 처리에 실패했습니다.\\n유효한 summary 시트와 2행 데이터를 가진 파일이 없습니다."  # noqa: E501
-            print(f"\\n[ERROR] {error_msg}")
+            if self.logger:
+                self.logger.error(error_msg)
             return (None, [], error_msg)
 
         if not data_rows:
             error_msg = "병합할 데이터가 없습니다.\\n모든 파일의 2행이 비어있습니다."
-            print(f"\\n[ERROR] {error_msg}")
+            if self.logger:
+                self.logger.error(error_msg)
             return (None, [], error_msg)
 
-        print("\\n=== 병합 성공 ===")
-        print(f"헤더 파일: {first_success_file}")
-        print(f"병합된 파일 수: {len(data_rows)}개\\n")
+        if self.logger:
+            self.logger.info("=== 병합 성공 ===")
+            self.logger.info(f"헤더 파일: {first_success_file}")
+            self.logger.info(f"병합된 파일 수: {len(data_rows)}개")
 
         return (header, data_rows, "")

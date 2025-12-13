@@ -1,13 +1,15 @@
-"""엑셀 파일 병합 도구 - 메인 프로그램 (Phase 1)
+"""엑셀 파일 병합 도구 - 메인 프로그램 (Phase 1, Phase 2 강화)
 
 Entry Point: 사용자와의 인터페이스 및 전체 플로우 관리
 """
+import os
 import tkinter as tk
 from tkinter import messagebox
 from typing import List, Optional
 from src.file_selector import FileSelector
 from src.excel_merger import ExcelMerger
 from src.file_writer import FileWriter
+from src.logger import Logger
 
 
 class ExcelMergerApp:
@@ -15,9 +17,13 @@ class ExcelMergerApp:
 
     def __init__(self) -> None:
         """애플리케이션 초기화"""
-        self.file_selector = FileSelector()
-        self.merger = ExcelMerger()
-        self.file_writer = FileWriter()
+        # Logger 생성
+        self.logger: Optional[Logger] = None
+
+        # 클래스 초기화 (Logger는 run()에서 생성 후 전달)
+        self.file_selector: FileSelector
+        self.merger: ExcelMerger
+        self.file_writer: FileWriter
 
         # Tkinter root 생성 (UI 백엔드)
         self.root = tk.Tk()
@@ -25,16 +31,30 @@ class ExcelMergerApp:
 
     def run(self) -> None:
         """애플리케이션 실행"""
-        print("=" * 60)
-        print("엑셀 파일 병합 도구 (Phase 1)")
-        print("=" * 60)
-        print()
+        # Logger 생성 및 초기화
+        save_location = self._get_initial_save_location()
+        if not save_location:
+            print("[INFO] 저장 위치가 선택되지 않았습니다. 프로그램을 종료합니다.")
+            return
+
+        log_filename = Logger.generate_log_filename()
+        log_path = os.path.join(save_location, log_filename)
+        self.logger = Logger(log_path)
+
+        # 클래스 초기화 (Logger 전달)
+        self.file_selector = FileSelector(self.logger)
+        self.merger = ExcelMerger(self.logger)
+        self.file_writer = FileWriter(self.logger)
+
+        self.logger.info("=" * 60)
+        self.logger.info("엑셀 파일 병합 도구 (Phase 2)")
+        self.logger.info("=" * 60)
 
         # Step 1: 파일 선택 방법 선택
         file_paths = self._select_files()
 
         if not file_paths:
-            print("[INFO] 파일이 선택되지 않았습니다. 프로그램을 종료합니다.")
+            self.logger.info("파일이 선택되지 않았습니다. 프로그램을 종료합니다.")
             return
 
         # Step 2: 파일 개수 검증
@@ -51,7 +71,7 @@ class ExcelMergerApp:
             )
             return
 
-        print(f"[INFO] 선택된 파일 수: {len(valid_files)}개\\n")
+        self.logger.info(f"선택된 파일 수: {len(valid_files)}개")
 
         # Step 4: 파일 병합
         header, data_rows, error_msg = self.merger.merge_files(valid_files)
@@ -60,14 +80,7 @@ class ExcelMergerApp:
             messagebox.showerror("병합 실패", error_msg)
             return
 
-        # Step 5: 저장 위치 선택
-        save_location = self.file_writer.select_save_location()
-
-        if not save_location:
-            print("[INFO] 저장 위치가 선택되지 않았습니다. 프로그램을 종료합니다.")
-            return
-
-        # Step 6: 파일 저장
+        # Step 5: 파일 저장 (저장 위치는 이미 선택됨)
         try:
             filename = self.file_writer.generate_filename()
             save_path = self.file_writer.get_unique_filepath(save_location, filename)
@@ -81,8 +94,21 @@ class ExcelMergerApp:
 
         except Exception as e:
             error_msg = f"파일 저장 중 오류가 발생했습니다:\\n\\n{e}"
-            print(f"[ERROR] {error_msg}")
+            if self.logger:
+                self.logger.error(error_msg)
             messagebox.showerror("저장 실패", error_msg)
+
+    def _get_initial_save_location(self) -> str:
+        """초기 저장 위치 선택 (로그 파일 생성용)
+
+        Returns:
+            선택된 디렉토리 경로, 취소 시 빈 문자열
+        """
+        from tkinter import filedialog
+        folder_path = filedialog.askdirectory(
+            title="결과 파일 및 로그 파일 저장 위치 선택"
+        )
+        return folder_path if folder_path else ""
 
     def _select_files(self) -> Optional[List[str]]:
         """파일 선택 방법을 선택하고 파일 목록 반환

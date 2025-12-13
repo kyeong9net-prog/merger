@@ -1,21 +1,26 @@
-"""결과 파일 생성 및 저장 (Phase 1)
+"""결과 파일 생성 및 저장 (Phase 1, Phase 2 강화)
 
 Single Responsibility: 병합된 데이터를 엑셀 파일로 저장하는 책임만 담당
 """
 import os
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Optional
 from tkinter import filedialog
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from src.logger import Logger
 
 
 class FileWriter:
     """결과 파일 생성 및 저장 클래스"""
 
-    def __init__(self) -> None:
-        """FileWriter 초기화"""
-        pass
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        """FileWriter 초기화
+
+        Args:
+            logger: Logger 인스턴스 (None이면 로깅 안 함)
+        """
+        self.logger = logger
 
     def select_save_location(self) -> str:
         """저장 위치 선택 UI
@@ -106,8 +111,9 @@ class FileWriter:
             workbook.save(save_path)
             workbook.close()
 
-            print(f"[SUCCESS] 병합 완료: {save_path}")
-            print(f"[INFO] 총 {len(data_rows)}개 파일의 데이터가 병합되었습니다.")
+            if self.logger:
+                self.logger.success(f"병합 완료: {save_path}")
+                self.logger.info(f"총 {len(data_rows)}개 파일의 데이터가 병합되었습니다.")
 
         except Exception as e:
             raise Exception(f"파일 생성 실패: {e}")
