@@ -150,4 +150,6 @@ class FileWriter:
             data: 쓸 데이터 리스트
         """
         for col_idx, value in enumerate(data, start=1):
-            sheet.cell(row=row_number, column=col_idx, value=value)
+            cell = sheet.cell(row=row_number, column=col_idx, value=value)
+            # 셀 서식을 "일반"으로 설정 (사용자지정 서식 제거)
+            cell.number_format = 'General'
