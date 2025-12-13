@@ -41,8 +41,9 @@ class HeaderValidator:
             HeaderValidationError: 헤더 검증 실패 시
         """
         try:
-            # Phase 4: 원본 파일 읽기 전용 처리
-            workbook = load_workbook(file_path, data_only=False, read_only=True)
+            # Phase 4: 병합 셀/수식 검증을 위해 read_only=False 사용
+            # (검증 후 저장하지 않으므로 원본 수정 없음)
+            workbook = load_workbook(file_path, data_only=False, read_only=False)
         except Exception as e:
             raise HeaderValidationError(f"파일 읽기 실패: {e}")
 
