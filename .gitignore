@@ -21,7 +21,7 @@ wheels/
 *.egg
 
 # PyInstaller
-*.spec
+# *.spec  # excel_merger.spec은 커밋해야 하므로 주석 처리
 
 # Pytest
 .pytest_cache/
@@ -52,3 +52,6 @@ merger_log_*.txt
 *.xls
 !tests/fixtures/*.xlsx
 !tests/fixtures/*.xls
+
+# Installer output
+installer_output/
