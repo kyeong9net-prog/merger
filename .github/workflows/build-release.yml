@@ -6,6 +6,9 @@ on:
       - 'v*'  # v1.0.0 형태의 태그가 푸시되면 실행
   workflow_dispatch:  # 수동 실행 가능
 
+permissions:
+  contents: write  # Release 생성 및 파일 업로드 권한
+
 jobs:
   build-windows:
     runs-on: windows-latest
