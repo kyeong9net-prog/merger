@@ -2,6 +2,9 @@
 REM Excel Merger Tool - Windows Build Script
 REM Phase 3: .exe 파일 생성
 
+REM 배치 파일이 있는 디렉토리로 이동
+cd /d %~dp0
+
 echo ========================================
 echo Excel Merger Tool - Build Script
 echo ========================================
