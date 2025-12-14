@@ -30,7 +30,7 @@ echo.
 
 REM Step 3: .exe 파일 빌드
 echo [3/4] Building .exe file with PyInstaller...
-python -m PyInstaller excel_merger.spec
+python -m PyInstaller --onefile --windowed --name ExcelMerger --hidden-import openpyxl --hidden-import openpyxl.cell --hidden-import openpyxl.worksheet --hidden-import openpyxl.workbook --hidden-import openpyxl.styles --hidden-import et_xmlfile src/main.py
 if errorlevel 1 (
     echo.
     echo [ERROR] Build failed!
