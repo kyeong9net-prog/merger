@@ -3,7 +3,9 @@
 Entry Point: 사용자와의 인터페이스 및 전체 플로우 관리
 """
 import os
+import sys
 import tkinter as tk
+from datetime import datetime
 from tkinter import messagebox
 from typing import List, Optional
 from src.file_selector import FileSelector
@@ -31,6 +33,16 @@ class ExcelMergerApp:
 
     def run(self) -> None:
         """애플리케이션 실행"""
+        # 만료 날짜 체크
+        expiry_date = datetime(2026, 11, 30, 23, 59, 59)
+        if datetime.now() > expiry_date:
+            messagebox.showerror(
+                "프로그램 만료",
+                "이 프로그램은 2026년 11월 30일에 만료되었습니다.\n\n"
+                "최신 버전을 다운로드하시거나 개발자에게 문의하세요."
+            )
+            sys.exit(0)
+
         # Logger 생성 및 초기화
         save_location = self._get_initial_save_location()
         if not save_location:
